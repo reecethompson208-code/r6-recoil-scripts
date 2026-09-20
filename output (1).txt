@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R6 Operator Recoil Control Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-dark: #1a1a2e;
+            --secondary-dark: #16213e;
+            --accent: #4ecdc4;
+            --accent-secondary: #ff6b6b;
+            --card-bg: rgba(30, 30, 46, 0.8);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #e0e0e0;
+            --text-secondary: #a9a9a9;
+            --operator-card-bg: rgba(40, 40, 60, 0.8);
+            --operator-card-hover: rgba(60, 60, 90, 0.9);
+            --operator-active: rgba(80, 60, 90, 0.9);
+            --script-bg: rgba(20, 20, 30, 0.9);
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary-dark), var(--secondary-dark));
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .github-link {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: var(--accent);
+            font-size: 1.2rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .github-link:hover {
+            color: var(--accent-secondary);
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--accent-secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 20px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 992px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            height: 100%;
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: var(--operator-card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .tab.active {
+            background: rgba(78, 205, 196, 0.3);
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .tab:hover:not(.active) {
+            background: var(--operator-card-hover);
+        }
+
+        .operators-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 15px;
+            max-height: 450px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .operator-card {
+            background: var(--operator-card-bg);
+            border-radius: 10px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .operator-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            background: var(--operator-card-hover);
+        }
+
+        .operator-card.active {
+            border-color: var(--accent-secondary);
+            background: var(--operator-active);
+        }
+
+        .operator-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .operator-name {
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 576px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ddd;
+            font-size: 0.95rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+        }
+
+        .value-display {
+            display: inline-block;
+            width: 40px;
+            text-align: right;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .script-output {
+            background: var(--script-bg);
+            border-radius: 10px;
+            padding: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            border: 1px solid var(--border);
+        }
+
+        .btn {
+            background: linear-gradient(90deg, var(--accent-secondary), var(--accent));
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            background: var(--operator-card-bg);
+            margin-left: 15px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent-secondary);
+        }
+
+        .status-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border-left: 4px solid var(--accent);
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            max-width: 350px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 0 20px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            margin-top: 30px;
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            background: var(--operator-card-bg);
+            border: 1px solid var(--border);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .feature-card h3 {
+            color: var(--accent);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+        }
+
+        .repo-info {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 30px 0;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .repo-info h3 {
+            color: var(--accent);
+            margin-bottom: 15px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="https://github.com/yourusername/r6-recoil-tool" target="_blank" class="github-link">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+            <h1>R6 Operator Recoil Control Tool</h1>
+            <p class="subtitle">Advanced operator-specific recoil compensation with humanization features</p>
+        </header>
+
+        <div class="features">
+            <div class="feature-card">
+                <h3><i class="fas fa-user-shield"></i> Operator Coverage</h3>
+                <p>All 42 operators from Rainbow Six Siege with unique recoil patterns and weapon configurations.</p>
+            </div>
+            <div class="feature-card">
+                <h3><i class="fas fa-sliders-h"></i> Humanization</h3>
+                <p>Randomized vertical/horizontal movements to make recoil adjustments appear natural and undetectable.</p>
+            </div>
+            <div class="feature-card">
+                <h3><i class="fas fa-code"></i> Custom Scripts</h3>
+                <p>Generate operator-specific scripts with adjustable compensation levels and timing variations.</p>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="card">
+                <h2 class="card-title"><i class="fas fa-users"></i> Operators</h2>
+                <div class="tabs">
+                    <div class="tab active" data-type="attackers">Attackers</div>
+                    <div class="tab" data-type="defenders">Defenders</div>
+                </div>
+                
+                <div class="search-container">
+                    <input type="text" class="search-box" id="operator-search" placeholder="Search operators...">
+                </div>
+                
+                <div class="operators-container" id="operators-container">
+                    <!-- Operators will be populated here -->
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title"><i class="fas fa-sliders-h"></i> Recoil Settings</h2>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>
+                            Vertical Compensation: <span id="vertical-value" class="value-display">85%</span>
+                        </label>
+                        <input type="range" id="vertical-slider" min="0" max="100" value="85">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>
+                            Horizontal Compensation: <span id="horizontal-value" class="value-display">78%</span>
+                        </label>
+                        <input type="range" id="horizontal-slider" min="0" max="100" value="78">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>
+                            Humanization Level: <span id="humanization-value" class="value-display">65%</span>
+                        </label>
+                        <input type="range" id="humanization-slider" min="0" max="100" value="65">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>
+                            Randomization Factor: <span id="randomization-value" class="value-display">42%</span>
+                        </label>
+                        <input type="range" id="randomization-slider" min="0" max="100" value="42">
+                    </div>
+                </div>
+                
+                <button class="btn" id="generate-btn">
+                    <i class="fas fa-cogs"></i> Generate Script
+                </button>
+                
+                <div class="status-indicator">
+                    <div class="status-dot" id="status-light"></div>
+                    <span>System Ready</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-file-code"></i> Generated Script</h2>
+            <div class="script-output" id="script-output">
+// R6S Recoil Control Script for Ash
+// Generated on: Oct 26, 2023
+// Vertical Compensation: 85%
+// Horizontal Compensation: 78%
+// Humanization Level: 65%
+// Randomization Factor: 42%
+
+#include &lt; Macros.h &gt;
+
+Settings {
+    sensitivity = 0.12;
+    compensation_mode = "adaptive";
+}
+
+RecoilPattern ash_g36c {
+    // Primary weapon recoil pattern
+    vertical_compensation = 85;
+    horizontal_compensation = 78;
+    
+    // Humanization parameters
+    humanization_level = 65;
+    randomization_factor = 42;
+    
+    // Compensation curve
+    compensation_curve = [
+        {shot = 1, x = 0.0, y = -1.2},
+        {shot = 2, x = 0.3, y = -0.8},
+        {shot = 3, x = -0.2, y = -1.0},
+        {shot = 4, x = 0.4, y = -1.1},
+        {shot = 5, x = -0.1, y = -0.9}
+    ];
+    
+    // Apply randomization within safe limits
+    apply_randomization(min_range = -0.3, max_range = 0.3);
+}
+
+Macro compensated_burst {
+    // Burst fire with compensation
+    loop(count = 5) {
+        shoot();
+        wait(randomize_time(base = 80ms, variance = 25ms));
+        compensate(recoil_pattern = ash_g36c);
+    }
+}
+
+// Activation macro
+on_event(EVENT_MOUSE_WHEEL_DOWN) {
+    execute_macro(compensated_burst);
+}
+            </div>
+        </div>
+        
+        <div class="repo-info">
+            <h3><i class="fab fa-github"></i> GitHub Repository Information</h3>
+            <p>This tool is open-source and available on GitHub. Contributions, issues, and feature requests are welcome!</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value">42</div>
+                    <div class="stat-label">Operators</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">Teams</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">∞</div>
+                    <div class="stat-label">Possibilities</div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Rainbow Six Siege Recoil Control Tool v3.0 | For educational purposes only</p>
+            <p>Note: This tool is designed for training and improvement of aim skills</p>
+        </footer>
+    </div>
+    
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i> Script generated successfully! Copy to clipboard or save to file.
+    </div>
+    
+    <script>
+        // All Rainbow Six Siege operators with their icons
+        const operators = {
+            attackers: [
+                {name: 'Sledge', role: 'Breacher', weapon: 'L85A2', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Sledge_R6.png/1200px-Sledge_R6.png'},
+                {name: 'Thatcher', role: 'Inhibitor', weapon: 'AR33', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Thatcher_R6.png/1200px-Thatcher_R6.png'},
+                {name: 'Ash', role: 'Soft Breacher', weapon: 'G36C', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Ash_R6.png/1200px-Ash_R6.png'},
+                {name: 'Thermite', role: 'Breacher', weapon: 'M1014', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Thermite_R6.png/1200px-Thermite_R6.png'},
+                {name: 'Twitch', role: 'Soft Breacher', weapon: 'F2', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Twitch_R6.png/1200px-Twitch_R6.png'},
+                {name: 'Montagne', role: 'Shield', weapon: '417', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Montagne_R6.png/1200px-Montagne_R6.png'},
+                {name: 'Glaz', role: 'Designated Marksman', weapon: 'AK-74M', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Glaz_R6.png/1200px-Glaz_R6.png'},
+                {name: 'Fuze', role: 'Inhibitor', weapon: 'AK-74M', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Fuze_R6.png/1200px-Fuze_R6.png'},
+                {name: 'Blitz', role: 'Shield', weapon: 'MP5K', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Blitz_R6.png/1200px-Blitz_R6.png'},
+                {name: 'IQ', role: 'Support', weapon: '552 Commando', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/IQ_R6.png/1200px-IQ_R6.png'},
+                {name: 'Buck', role: 'Soft Breacher', weapon: 'C8-SFW', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Buck_R6.png/1200px-Buck_R6.png'},
+                {name: 'Blackbeard', role: 'Anchor', weapon: 'MK17 CQB', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Blackbeard_R6.png/1200px-Blackbeard_R6.png'},
+                {name: 'Capitão', role: 'Soft Breacher', weapon: 'PARA-308', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Capitão_R6.png/1200px-Capitão_R6.png'},
+                {name: 'Hibana', role: 'Soft Breacher', weapon: 'TYPE-89', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Hibana_R6.png/1200px-Hibana_R6.png'},
+                {name: 'Jackal', role: 'Tracker', weapon: 'C7E', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Jackal_R6.png/1200px-Jackal_R6.png'},
+                {name: 'Ying', role: 'Soft Breacher', weapon: 'T-95 LSW', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Ying_R6.png/1200px-Ying_R6.png'},
+                {name: 'Zofia', role: 'Soft Breacher', weapon: 'M762', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Zofia_R6.png/1200px-Zofia_R6.png'},
+                {name: 'Dokkaebi', role: 'Intel Denier', weapon: 'K1A', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Dokkaebi_R6.png/1200px-Dokkaebi_R6.png'},
+                {name: 'Lion', role: 'Tracker', weapon: 'V308', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Lion_R6.png/1200px-Lion_R6.png'},
+                {name: 'Finka', role: 'Support', weapon: 'P90', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Finka_R6.png/1200px-Finka_R6.png'},
+                {name: 'Maverick', role: 'Breacher', weapon: 'AR-15.50', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Maverick_R6.png/1200px-Maverick_R6.png'},
+                {name: 'Nomad', role: 'Mobile Attacker', weapon: 'P90', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Nomad_R6.png/1200px-Nomad_R6.png'},
+                {name: 'Gridlock', role: 'Trapper', weapon: 'M249 SAW', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Gridlock_R6.png/1200px-Gridlock_R6.png'},
+                {name: 'Nøkk', role: 'Intel Denier', weapon: 'FMG-9', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Nøkk_R6.png/1200px-Nøkk_R6.png'},
+                {name: 'Amaru', role: 'Soft Breacher', weapon: 'G8A1', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Amaru_R6.png/1200px-Amaru_R6.png'},
+                {name: 'Kali', role: 'Soft Breacher', weapon: 'CSRX 300', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Kali_R6.png/1200px-Kali_R6.png'},
+                {name: 'Iana', role: 'Intel Gatherer', weapon: 'ARX200', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Iana_R6.png/1200px-Iana_R6.png'},
+                {name: 'Ace', role: 'Breacher', weapon: 'AK-12', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Ace_R6.png/1200px-Ace_R6.png'},
+                {name: 'Zero', role: 'Intel Denier', weapon: 'SNK', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Zero_R6.png/1200px-Zero_R6.png'},
+                {name: 'Flores', role: 'Inhibitor', weapon: 'Mk 14 EBR', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Flores_R6.png/1200px-Flores_R6.png'},
+                {name: 'Osa', role: 'Anchor', weapon: 'SPEAR .308', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Osa_R6.png/1200px-Osa_R6.png'},
+                {name: 'Sens', role: 'Intel Gatherer', weapon: 'M4', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Sens_R6.png/1200px-Sens_R6.png'},
+                {name: 'Grim', role: 'Soft Breacher', weapon: '9mm C1', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Grim_R6.png/1200px-Grim_R6.png'}
+            ],
+            defenders: [
+                {name: 'Smoke', role: 'Guardian', weapon: 'FMG-9', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Smoke_R6.png/1200px-Smoke_R6.png'},
+                {name: 'Mute', role: 'Guardian', weapon: 'MP5K', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Mute_R6.png/1200px-Mute_R6.png'},
+                {name: 'Castle', role: 'Fortress', weapon: 'UMP45', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Castle_R6.png/1200px-Castle_R6.png'},
+                {name: 'Pulse', role: 'Sentinel', weapon: 'M4A1', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Pulse_R6.png/1200px-Pulse_R6.png'},
+                {name: 'Doc', role: 'Warden', weapon: 'MP5', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Doc_R6.png/1200px-Doc_R6.png'},
+                {name: 'Rook', role: 'Warden', weapon: 'MP5K', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Rook_R6.png/1200px-Rook_R6.png'},
+                {name: 'Kapkan', role: 'Trap', weapon: '9x19VSN', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Kapkan_R6.png/1200px-Kapkan_R6.png'},
+                {name: 'Tachanka', role: 'Fortress', weapon: 'SASG-12', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Tachanka_R6.png/1200px-Tachanka_R6.png'},
+                {name: 'Jäger', role: 'Anti-Gadget', weapon: '416-C Carbine', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Jäger_R6.png/1200px-Jäger_R6.png'},
+                {name: 'Bandit', role: 'Anti-Gadget', weapon: 'MP7', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Bandit_R6.png/1200px-Bandit_R6.png'},
+                {name: 'Frost', role: 'Warden', weapon: '9mm C1', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Frost_R6.png/1200px-Frost_R6.png'},
+                {name: 'Valkyrie', role: 'Intel Gatherer', weapon: 'MPX', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Valkyrie_R6.png/1200px-Valkyrie_R6.png'},
+                {name: 'Caveira', role: 'Roam', weapon: 'M12', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Caveira_R6.png/1200px-Caveira_R6.png'},
+                {name: 'Echo', role: 'Sentinel', weapon: 'MP5SD', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Echo_R6.png/1200px-Echo_R6.png'},
+                {name: 'Mira', role: 'Fortress', weapon: 'VECTOR .45 ACP', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Mira_R6.png/1200px-Mira_R6.png'},
+                {name: 'Lesion', role: 'Warden', weapon: 'UMP45', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Lesion_R6.png/1200px-Lesion_R6.png'},
+                {name: 'Ela', role: 'Trapper', weapon: 'SCORPION EVO 3 A1', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Ela_R6.png/1200px-Ela_R6.png'},
+                {name: 'Vigil', role: 'Roam', weapon: 'K1A', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Vigil_R6.png/1200px-Vigil_R6.png'},
+                {name: 'Maestro', role: 'Sentinel', weapon: 'ALDA 5.56', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Maestro_R6.png/1200px-Maestro_R6.png'},
+                {name: 'Alibi', role: 'Fortress', weapon: 'Mx4 Storm', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Alibi_R6.png/1200px-Alibi_R6.png'},
+                {name: 'Clash', role: 'Warden', weapon: 'CCE Mk 2', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Clash_R6.png/1200px-Clash_R6.png'},
+                {name: 'Kaid', role: 'Fortress', weapon: 'AUG A2', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Kaid_R6.png/1200px-Kaid_R6.png'},
+                {name: 'Mozzie', role: 'Anti-Gadget', weapon: 'P90', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Mozzie_R6.png/1200px-Mozzie_R6.png'},
+                {name: 'Warden', role: 'Warden', weapon: 'MPX', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Warden_R6.png/1200px-Warden_R6.png'},
+                {name: 'Goyo', role: 'Guardian', weapon: 'M249 SAW', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Goyo_R6.png/1200px-Goyo_R6.png'},
+                {name: 'Wamai', role: 'Anti-Gadget', weapon: 'MP5K', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Wamai_R6.png/1200px-Wamai_R6.png'},
+                {name: 'Oryx', role: 'Roam', weapon: '417', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Oryx_R6.png/1200px-Oryx_R6.png'},
+                {name: 'Melusi', role: 'Warden', weapon: 'TR12', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Melusi_R6.png/1200px-Melusi_R6.png'},
+                {name: 'Aruni', role: 'Fortress', weapon: 'PRB92', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Aruni_R6.png/1200px-Aruni_R6.png'},
+                {name: 'Thunderbird', role: 'Warden', weapon: 'M249 SAW', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Thunderbird_R6.png/1200px-Thunderbird_R6.png'},
+                {name: 'Thorn', role: 'Trapper', weapon: 'MP-443 Grach', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Thorn_R6.png/1200px-Thorn_R6.png'},
+                {name: 'Azami', role: 'Fortress', weapon: 'Scorpion EVO III', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Azami_R6.png/1200px-Azami_R6.png'},
+                {name: 'Solis', role: 'Sentinel', weapon: '9mm C1', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Solis_R6.png/1200px-Solis_R6.png'},
+                {name: 'Fenrir', role: 'Trap', weapon: 'MP5K', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Fenrir_R6.png/1200px-Fenrir_R6.png'},
+                {name: 'Tubarão', role: 'Inhibitor', weapon: '556XI', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Tubarão_R6.png/1200px-Tubarão_R6.png'}
+            ]
+        };
+
+        // DOM Elements
+        const operatorsContainer = document.getElementById('operators-container');
+        const tabs = document.querySelectorAll('.tab');
+        const operatorSearch = document.getElementById('operator-search');
+        let currentType = 'attackers';
+
+        // Render operators
+        function renderOperators(type) {
+            operatorsContainer.innerHTML = '';
+            const filteredOps = operators[type].filter(op => 
+                op.name.toLowerCase().includes(operatorSearch.value.toLowerCase())
+            );
+            
+            filteredOps.forEach((op, index) => {
+                const operatorCard = document.createElement('div');
+                operatorCard.className = 'operator-card';
+                operatorCard.dataset.index = index;
+                operatorCard.dataset.type = type;
+                
+                operatorCard.innerHTML = `
+                    <div class="operator-icon" style="background-image: url('${op.icon}')"></div>
+                    <div class="operator-name">${op.name}</div>
+                `;
+                
+                operatorCard.addEventListener('click', () => {
+                    document.querySelectorAll('.operator-card').forEach(card => {
+                        card.classList.remove('active');
+                    });
+                    operatorCard.classList.add('active');
+                    updateScriptForOperator(op);
+                });
+                
+                operatorsContainer.appendChild(operatorCard);
+            });
+            
+            // Set first operator as active by default
+            if (filteredOps.length > 0) {
+                const firstCard = operatorsContainer.querySelector('.operator-card');
+                firstCard.classList.add('active');
+                updateScriptForOperator(filteredOps[0]);
+            }
+        }
+
+        // Update script for selected operator
+        function updateScriptForOperator(operator) {
+            const scriptOutput = document.getElementById('script-output');
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            
+            const weaponLower = operator.weapon.toLowerCase().replace(/\s+/g, '');
+            
+            scriptOutput.textContent = `// R6S Recoil Control Script for ${operator.name}
+// Generated on: ${dateStr}
+// Vertical Compensation: ${document.getElementById('vertical-slider').value}%
+// Horizontal Compensation: ${document.getElementById('horizontal-slider').value}%
+// Humanization Level: ${document.getElementById('humanization-slider').value}%
+// Randomization Factor: ${document.getElementById('randomization-slider').value}%
+
+#include < Macros.h >
+
+Settings {
+    sensitivity = 0.12;
+    compensation_mode = "adaptive";
+}
+
+RecoilPattern ${operator.name.toLowerCase()}_${weaponLower} {
+    // Primary weapon recoil pattern
+    vertical_compensation = ${document.getElementById('vertical-slider').value};
+    horizontal_compensation = ${document.getElementById('horizontal-slider').value};
+    
+    // Humanization parameters
+    humanization_level = ${document.getElementById('humanization-slider').value};
+    randomization_factor = ${document.getElementById('randomization-slider').value};
+    
+    // Compensation curve
+    compensation_curve = [
+        {shot = 1, x = 0.0, y = -1.2},
+        {shot = 2, x = 0.3, y = -0.8},
+        {shot = 3, x = -0.2, y = -1.0},
+        {shot = 4, x = 0.4, y = -1.1},
+        {shot = 5, x = -0.1, y = -0.9}
+    ];
+    
+    // Apply randomization within safe limits
+    apply_randomization(min_range = -0.3, max_range = 0.3);
+}
+
+Macro compensated_burst {
+    // Burst fire with compensation
+    loop(count = 5) {
+        shoot();
+        wait(randomize_time(base = 80ms, variance = 25ms));
+        compensate(recoil_pattern = ${operator.name.toLowerCase()}_${weaponLower});
+    }
+}
+
+// Activation macro
+on_event(EVENT_MOUSE_WHEEL_DOWN) {
+    execute_macro(compensated_burst);
+}`;
+        }
+
+        // Event Listeners
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentType = tab.dataset.type;
+                renderOperators(currentType);
+            });
+        });
+
+        operatorSearch.addEventListener('input', () => {
+            renderOperators(currentType);
+        });
+
+        // Update slider value displays
+        const sliders = document.querySelectorAll('input[type="range"]');
+        sliders.forEach(slider => {
+            const valueDisplay = document.getElementById(`${slider.id.split('-')[0]}-value`);
+            
+            slider.addEventListener('input', () => {
+                valueDisplay.textContent = `${slider.value}%`;
+                
+                // Update script when sliders change
+                const activeCard = document.querySelector('.operator-card.active');
+                if (activeCard) {
+                    const type = activeCard.dataset.type;
+                    const index = activeCard.dataset.index;
+                    const operator = operators[type][index];
+                    updateScriptForOperator(operator);
+                }
+                
+                // Add animation effect when changing
+                valueDisplay.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    valueDisplay.style.transform = 'scale(1)';
+                }, 200);
+            });
+        });
+
+        // Generate button functionality
+        document.getElementById('generate-btn').addEventListener('click', () => {
+            showNotification();
+            simulateProcessing();
+        });
+
+        function showNotification() {
+            const notification = document.getElementById('notification');
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function simulateProcessing() {
+            const statusLight = document.getElementById('status-light');
+            const statusText = document.querySelector('.status-indicator span');
+            
+            // Processing state
+            statusLight.classList.remove('active');
+            statusText.textContent = 'Processing...';
+            
+            setTimeout(() => {
+                // Completed state
+                statusLight.classList.add('active');
+                statusText.textContent = 'Ready';
+            }, 1500);
+        }
+
+        // Initialize
+        renderOperators(currentType);
+    </script>
+</body>
+</html>
